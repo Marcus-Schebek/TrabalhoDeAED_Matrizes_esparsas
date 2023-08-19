@@ -61,7 +61,7 @@ Matrix *matrix_create(void)
         {
             if (i == current_row->line)
             {
-                // Insert in the same row
+                // insere na mesma linha
                 while (current_col->right && current_col->right->column < j)
                 {
                     current_col = current_col->right;
@@ -72,7 +72,7 @@ Matrix *matrix_create(void)
             }
             else if (i > current_row->line)
             {
-                // Insert in a new row
+                // Insere numa nova linha
                 Matrix *prev_row = NULL;
                 while (current_row && current_row->line < i)
                 {
@@ -120,7 +120,7 @@ Matrix *matrix_create(void)
             }
             else
             {
-                // Insert in an earlier row
+                //insere numa linha anterior
                 Matrix *prev_row = NULL;
                 Matrix *row_current = head;
                 while (row_current && row_current->line < i)
@@ -139,7 +139,7 @@ Matrix *matrix_create(void)
                 }
 
                 Matrix *prev_col = NULL;
-                Matrix *col_current = row_current; // Start at the current row
+                Matrix *col_current = row_current; //começa uma nova linha
                 while (col_current && col_current->column < j)
                 {
                     prev_col = col_current;
