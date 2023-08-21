@@ -2,651 +2,525 @@
 #include <stdlib.h>
 #include "lib.h"
 
-Matrix *matrix_create(void)
-{
+
+Matrix* create_matrix_node(int line, int column, float info) {
+    Matrix* node = (Matrix*)malloc(sizeof(Matrix));
+    if (node) {
+        node->right = node->below = NULL;
+        node->line = line;
+        node->column = column;
+        node->info = info;
+    }
+    return node;
+}
+
+Matrix* matrix_create() {
     int m, n;
-    printf("Informe o número de linhas da matriz: ");
+    printf("Insira a quantidade de linhas: ");
     scanf("%d", &m);
-    printf("Informe o número de colunas da matriz: ");
+    printf("Insira a quantidade de colunas: ");
     scanf("%d", &n);
 
-    Matrix *head = NULL; // Cabeça da matriz esparsa
-    Matrix *current_row = NULL;
-    Matrix *current_col = NULL;
+    Matrix* head = create_matrix_node(-1, -1, 0);
+    Matrix* current_row[m];
+    Matrix* current_column[n];
 
-    printf("Informe os elementos da matriz no formato (linha coluna valor).\n");
-    printf("Use 0 0 0 para finalizar a entrada.\n");
+    for (int i = 1; i <= m; ++i)  // Start from 1
+        current_row[i] = head;
 
-    while (1)
-    {
-        int i, j;
-        float value;
-        printf("Informe a linha, coluna e valor (ou 0 0 0 para finalizar): ");
-        if (scanf("%d %d %f", &i, &j, &value) != 3)
-        {
-            break; // Sai do loop quando a leitura falhar
-        }
+    for (int j = 1; j <= n; ++j)  // Start from 1
+        current_column[j] = head;
 
-        if (i == 0 && j == 0 && value == 0)
-        {
-            break; // Sai do loop quando o marcador de fim for encontrado
-        }
-
-        if (i > m || j > n)
-        {
-            fprintf(stderr, "Erro: Índices fora dos limites da matriz\n");
-            continue;
-        }
-
-        Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-        if (!new_element)
-        {
-            fprintf(stderr, "Erro: Falha na alocação de memória\n");
-            exit(1);
-        }
-
-        new_element->line = i;
-        new_element->column = j;
-        new_element->info = value;
-        new_element->right = NULL;
-        new_element->below = NULL;
-
-        if (!head)
-        {
-            head = new_element;
-            current_row = new_element;
-            current_col = new_element;
-        }
-        else
-        {
-            if (i == current_row->line)
-            {
-                // insere na mesma linha
-                while (current_col->right && current_col->right->column < j)
-                {
-                    current_col = current_col->right;
-                }
-                new_element->right = current_col->right;
-                current_col->right = new_element;
-                current_col = new_element;
-            }
-            else if (i > current_row->line)
-            {
-                // Insere numa nova linha
-                Matrix *prev_row = NULL;
-                while (current_row && current_row->line < i)
-                {
-                    prev_row = current_row;
-                    current_row = current_row->below;
-                }
-
-                new_element->below = current_row;
-                if (prev_row)
-                {
-                    prev_row->below = new_element;
-                }
-                else
-                {
-                    head->below = new_element;
-                }
-
-                Matrix *prev_col = NULL;
-                Matrix *col_current = prev_row ? prev_row->right : head;
-                while (col_current && col_current->column < j)
-                {
-                    prev_col = col_current;
-                    col_current = col_current->right;
-                }
-
-                new_element->right = col_current;
-                if (prev_col)
-                {
-                    prev_col->right = new_element;
-                }
-                else
-                {
-                    if (prev_row)
-                    {
-                        prev_row->right = new_element;
-                    }
-                    else
-                    {
-                        head->right = new_element;
-                    }
-                }
-
-                current_row = new_element;
-                current_col = new_element;
-            }
-            else
-            {
-                //insere numa linha anterior
-                Matrix *prev_row = NULL;
-                Matrix *row_current = head;
-                while (row_current && row_current->line < i)
-                {
-                    prev_row = row_current;
-                    row_current = row_current->below;
-                }
-                new_element->below = row_current;
-                if (prev_row)
-                {
-                    prev_row->below = new_element;
-                }
-                else
-                {
-                    head = new_element;
-                }
-
-                Matrix *prev_col = NULL;
-                Matrix *col_current = row_current; //começa uma nova linha
-                while (col_current && col_current->column < j)
-                {
-                    prev_col = col_current;
-                    col_current = col_current->right;
-                }
-                new_element->right = col_current;
-                if (prev_col)
-                {
-                    prev_col->right = new_element;
-                }
-                else
-                {
-                    row_current = new_element;
-                }
-
-                current_row = new_element;
-                current_col = new_element;
-            }
-        }
+    int i, j;
+    float value;
+    printf("Informe a linha, coluna e valor (ou 0 0 0 para finalizar): ");
+    while (scanf("%d %d %f", &i, &j, &value) == 3) {
+       if (i == 0 && j == 0 && value == 0) {
+        break;  // Encerrar o loop ao fornecer (0, 0, 0)
     }
+        Matrix* new_node = create_matrix_node(i, j, value);
+
+        new_node->right = current_row[i]->right;
+        current_row[i]->right = new_node;
+        current_row[i] = new_node;
+
+        new_node->below = current_column[j]->below;
+        current_column[j]->below = new_node;
+        current_column[j] = new_node;
+
+        printf("Inserido elemento em (%d, %d) com valor %.2f\n", i, j, value);
+        printf("Informe a linha, coluna e valor (ou 0 0 0 para finalizar): ");
+    }
+
     return head;
 }
 
-void matrix_print(Matrix *head)
-{
-    // Encontrar o número de linhas e colunas percorrendo a matriz
-    int rows = 0, cols = 0;
-    Matrix *current_row = head;
-    Matrix *current_col = head;
 
-    while (current_row)
-    {
-        if (current_row->line > rows)
-        {
-            rows = current_row->line;
-        }
-        current_row = current_row->below;
+void matrix_print(Matrix* m) {
+    int columns, lines;
+    Matrix *elementCel;
+
+    if (!m || m->line <= 0 || m->column <= 0) {
+        printf("Matriz inválida.\n");
+        return;
     }
 
-    while (current_col)
-    {
-        if (current_col->column > cols)
-        {
-            cols = current_col->column;
-        }
-        current_col = current_col->right;
-    }
+    elementCel = m->right;
 
-    for (int i = 1; i <= rows; i++)
-    {
-        current_row = head;
-        current_col = head;
-
-        printf("%d |", i);
-
-        for (int j = 1; j <= cols; j++)
-        {
-            if (current_col && current_col->line == i && current_col->column == j)
-            {
-                printf(" %.2f,", current_col->info);
-                current_col = current_col->right;
-            }
-            else
-            {
-                printf(" 0,");
+    printf("\n");
+    for (lines = 1; lines <= m->line; lines++) {
+        for (columns = 1; columns <= m->column; columns++) {
+            if (elementCel != NULL && elementCel->line == lines && elementCel->column == columns) {
+                printf(" \t%0.2f,", elementCel->info);
+                elementCel = elementCel->right;
+            } else {
+                printf(" \t%0.2f,", 0.0f);
             }
         }
-
-        printf("\b |\n");
-    }
-}
-void matrix_destroy(Matrix *m)
-{
-    Matrix *current = m;
-    while (current != NULL)
-    {
-        Matrix *temp = current;
-        current = current->right;
-        free(temp);
+        printf("\n");
+        if (lines < m->line) {
+            elementCel = elementCel->below;
+        }
     }
 }
 
-Matrix *matrix_add(Matrix *m, Matrix *n)
-{
-    if (m == NULL || n == NULL)
-    {
-        return NULL; // Retorna NULL se uma das matrizes for vazia
-    }
 
-    Matrix *result_head = NULL; // Cabeça da matriz resultante
-    Matrix *result_prev_col = NULL;
-    Matrix *result_prev_row = NULL;
+// void matrix_destroy(Matrix *m)
+// {
+//     Matrix *current = m;
+//     while (current != NULL)
+//     {
+//         Matrix *temp = current;
+//         current = current->right;
+//         free(temp);
+//     }
+// }
 
-    while (m != NULL && n != NULL)
-    {
-        // Comparar as posições (linha, coluna) das duas matrizes
-        if (m->line < n->line || (m->line == n->line && m->column < n->column))
-        {
-            // Inserir elemento da matriz m na matriz resultante
-            Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-            if (!new_element)
-            {
-                fprintf(stderr, "Erro: Falha na alocação de memória\n");
-                exit(1);
-            }
+// Matrix *matrix_add(Matrix *m, Matrix *n)
+// {
+//     if (m == NULL || n == NULL)
+//     {
+//         return NULL; // Retorna NULL se uma das matrizes for vazia
+//     }
 
-            new_element->line = m->line;
-            new_element->column = m->column;
-            new_element->info = m->info + 0; // Copia o valor de m->info
-            new_element->right = NULL;
-            new_element->below = NULL;
+//     Matrix *result_head = NULL; // Cabeça da matriz resultante
+//     Matrix *result_prev_col = NULL;
+//     Matrix *result_prev_row = NULL;
 
-            if (result_prev_col)
-            {
-                result_prev_col->right = new_element;
-            }
-            result_prev_col = new_element;
+//     while (m != NULL && n != NULL)
+//     {
+//         // Comparar as posições (linha, coluna) das duas matrizes
+//         if (m->line < n->line || (m->line == n->line && m->column < n->column))
+//         {
+//             // Inserir elemento da matriz m na matriz resultante
+//             Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
+//             if (!new_element)
+//             {
+//                 fprintf(stderr, "Erro: Falha na alocação de memória\n");
+//                 exit(1);
+//             }
 
-            if (!result_prev_row || result_prev_row->line != m->line)
-            {
-                if (result_head == NULL)
-                {
-                    result_head = new_element;
-                }
-                result_prev_row = new_element;
-            }
+//             new_element->line = m->line;
+//             new_element->column = m->column;
+//             new_element->info = m->info + 0; // Copia o valor de m->info
+//             new_element->right = NULL;
+//             new_element->below = NULL;
 
-            m = m->right;
-        }
-        else if (m->line > n->line || (m->line == n->line && m->column > n->column))
-        {
-            // Inserir elemento da matriz n na matriz resultante
-            Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-            if (!new_element)
-            {
-                fprintf(stderr, "Erro: Falha na alocação de memória\n");
-                exit(1);
-            }
+//             if (result_prev_col)
+//             {
+//                 result_prev_col->right = new_element;
+//             }
+//             result_prev_col = new_element;
 
-            new_element->line = n->line;
-            new_element->column = n->column;
-            new_element->info = n->info + 0; // Copia o valor de n->info
-            new_element->right = NULL;
-            new_element->below = NULL;
+//             if (!result_prev_row || result_prev_row->line != m->line)
+//             {
+//                 if (result_head == NULL)
+//                 {
+//                     result_head = new_element;
+//                 }
+//                 result_prev_row = new_element;
+//             }
 
-            if (result_prev_col)
-            {
-                result_prev_col->right = new_element;
-            }
-            result_prev_col = new_element;
+//             m = m->right;
+//         }
+//         else if (m->line > n->line || (m->line == n->line && m->column > n->column))
+//         {
+//             // Inserir elemento da matriz n na matriz resultante
+//             Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
+//             if (!new_element)
+//             {
+//                 fprintf(stderr, "Erro: Falha na alocação de memória\n");
+//                 exit(1);
+//             }
 
-            if (!result_prev_row || result_prev_row->line != n->line)
-            {
-                if (result_head == NULL)
-                {
-                    result_head = new_element;
-                }
-                result_prev_row = new_element;
-            }
+//             new_element->line = n->line;
+//             new_element->column = n->column;
+//             new_element->info = n->info + 0; // Copia o valor de n->info
+//             new_element->right = NULL;
+//             new_element->below = NULL;
 
-            n = n->right;
-        }
-        else
-        {
-            // As posições (linha, coluna) são iguais em ambas as matrizes
-            // Soma os valores e insere o elemento resultante na matriz resultante
-            Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-            if (!new_element)
-            {
-                fprintf(stderr, "Erro: Falha na alocação de memória\n");
-                exit(1);
-            }
+//             if (result_prev_col)
+//             {
+//                 result_prev_col->right = new_element;
+//             }
+//             result_prev_col = new_element;
 
-            new_element->line = m->line;
-            new_element->column = m->column;
-            new_element->info = m->info + n->info;
-            new_element->right = NULL;
-            new_element->below = NULL;
+//             if (!result_prev_row || result_prev_row->line != n->line)
+//             {
+//                 if (result_head == NULL)
+//                 {
+//                     result_head = new_element;
+//                 }
+//                 result_prev_row = new_element;
+//             }
 
-            if (result_prev_col)
-            {
-                result_prev_col->right = new_element;
-            }
-            result_prev_col = new_element;
+//             n = n->right;
+//         }
+//         else
+//         {
+//             // As posições (linha, coluna) são iguais em ambas as matrizes
+//             // Soma os valores e insere o elemento resultante na matriz resultante
+//             Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
+//             if (!new_element)
+//             {
+//                 fprintf(stderr, "Erro: Falha na alocação de memória\n");
+//                 exit(1);
+//             }
 
-            if (!result_prev_row || result_prev_row->line != m->line)
-            {
-                if (result_head == NULL)
-                {
-                    result_head = new_element;
-                }
-                result_prev_row = new_element;
-            }
+//             new_element->line = m->line;
+//             new_element->column = m->column;
+//             new_element->info = m->info + n->info;
+//             new_element->right = NULL;
+//             new_element->below = NULL;
 
-            m = m->right;
-            n = n->right;
-        }
-    }
+//             if (result_prev_col)
+//             {
+//                 result_prev_col->right = new_element;
+//             }
+//             result_prev_col = new_element;
 
-    // Caso ainda haja elementos restantes em m ou n, insere na matriz resultante
-    while (m != NULL)
-    {
-        // Inserir elemento da matriz m na matriz resultante
-        Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-        if (!new_element)
-        {
-            fprintf(stderr, "Erro: Falha na alocação de memória\n");
-            exit(1);
-        }
+//             if (!result_prev_row || result_prev_row->line != m->line)
+//             {
+//                 if (result_head == NULL)
+//                 {
+//                     result_head = new_element;
+//                 }
+//                 result_prev_row = new_element;
+//             }
 
-        new_element->line = m->line;
-        new_element->column = m->column;
-        new_element->info = m->info + 0; // Copia o valor de m->info
-        new_element->right = NULL;
-        new_element->below = NULL;
+//             m = m->right;
+//             n = n->right;
+//         }
+//     }
 
-        if (result_prev_col)
-        {
-            result_prev_col->right = new_element;
-        }
-        result_prev_col = new_element;
+//     // Caso ainda haja elementos restantes em m ou n, insere na matriz resultante
+//     while (m != NULL)
+//     {
+//         // Inserir elemento da matriz m na matriz resultante
+//         Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
+//         if (!new_element)
+//         {
+//             fprintf(stderr, "Erro: Falha na alocação de memória\n");
+//             exit(1);
+//         }
 
-        if (!result_prev_row || result_prev_row->line != m->line)
-        {
-            if (result_head == NULL)
-            {
-                result_head = new_element;
-            }
-            result_prev_row = new_element;
-        }
+//         new_element->line = m->line;
+//         new_element->column = m->column;
+//         new_element->info = m->info + 0; // Copia o valor de m->info
+//         new_element->right = NULL;
+//         new_element->below = NULL;
 
-        m = m->right;
-    }
+//         if (result_prev_col)
+//         {
+//             result_prev_col->right = new_element;
+//         }
+//         result_prev_col = new_element;
 
-    while (n != NULL)
-    {
-        // Inserir elemento da matriz n na matriz resultante
-        Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-        if (!new_element)
-        {
-            fprintf(stderr, "Erro: Falha na alocação de memória\n");
-            exit(1);
-        }
+//         if (!result_prev_row || result_prev_row->line != m->line)
+//         {
+//             if (result_head == NULL)
+//             {
+//                 result_head = new_element;
+//             }
+//             result_prev_row = new_element;
+//         }
 
-        new_element->line = n->line;
-        new_element->column = n->column;
-        new_element->info = n->info + 0; // Copia o valor de n->info
-        new_element->right = NULL;
-        new_element->below = NULL;
+//         m = m->right;
+//     }
 
-        if (result_prev_col)
-        {
-            result_prev_col->right = new_element;
-        }
-        result_prev_col = new_element;
+//     while (n != NULL)
+//     {
+//         // Inserir elemento da matriz n na matriz resultante
+//         Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
+//         if (!new_element)
+//         {
+//             fprintf(stderr, "Erro: Falha na alocação de memória\n");
+//             exit(1);
+//         }
 
-        if (!result_prev_row || result_prev_row->line != n->line)
-        {
-            if (result_head == NULL)
-            {
-                result_head = new_element;
-            }
-            result_prev_row = new_element;
-        }
+//         new_element->line = n->line;
+//         new_element->column = n->column;
+//         new_element->info = n->info + 0; // Copia o valor de n->info
+//         new_element->right = NULL;
+//         new_element->below = NULL;
 
-        n = n->right;
-    }
+//         if (result_prev_col)
+//         {
+//             result_prev_col->right = new_element;
+//         }
+//         result_prev_col = new_element;
 
-    return result_head;
-}
+//         if (!result_prev_row || result_prev_row->line != n->line)
+//         {
+//             if (result_head == NULL)
+//             {
+//                 result_head = new_element;
+//             }
+//             result_prev_row = new_element;
+//         }
 
-Matrix *matrix_multiply(Matrix *m, Matrix *n)
-{
-    if (m == NULL || n == NULL)
-    {
-        return NULL; // Retorna NULL se uma das matrizes for vazia
-    }
+//         n = n->right;
+//     }
 
-    // Verifica se o número de colunas da matriz m é igual ao número de linhas da matriz n
-    if (m->column != n->line)
-    {
-        fprintf(stderr, "Erro: As dimensões das matrizes não são compatíveis para multiplicação\n");
-        return NULL;
-    }
+//     return result_head;
+// }
 
-    Matrix *result_head = NULL; // Cabeça da matriz resultante
+// Matrix *matrix_multiply(Matrix *m, Matrix *n)
+// {
+//     if (m == NULL || n == NULL)
+//     {
+//         return NULL; // Retorna NULL se uma das matrizes for vazia
+//     }
 
-    // Inicializa uma matriz temporária para auxiliar na multiplicação
-    float temp_matrix[m->line][n->column];
-    for (int i = 0; i < m->line; i++)
-    {
-        for (int j = 0; j < n->column; j++)
-        {
-            temp_matrix[i][j] = 0.0;
-        }
-    }
+//     // Verifica se o número de colunas da matriz m é igual ao número de linhas da matriz n
+//     if (m->column != n->line)
+//     {
+//         fprintf(stderr, "Erro: As dimensões das matrizes não são compatíveis para multiplicação\n");
+//         return NULL;
+//     }
 
-    // Realiza a multiplicação das matrizes
-    for (Matrix *i = m; i != NULL; i = i->right)
-    {
-        for (Matrix *j = n; j != NULL; j = j->below)
-        {
-            if (i->column == j->line)
-            {
-                temp_matrix[i->line - 1][j->column - 1] += i->info * j->info;
-            }
-        }
-    }
+//     Matrix *result_head = NULL; // Cabeça da matriz resultante
 
-    // Cria a matriz resultante com base na matriz temporária
-    for (int i = 0; i < m->line; i++)
-    {
-        for (int j = 0; j < n->column; j++)
-        {
-            if (temp_matrix[i][j] != 0.0)
-            {
-                Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-                if (!new_element)
-                {
-                    fprintf(stderr, "Erro: Falha na alocação de memória\n");
-                    exit(1);
-                }
+//     // Inicializa uma matriz temporária para auxiliar na multiplicação
+//     float temp_matrix[m->line][n->column];
+//     for (int i = 0; i < m->line; i++)
+//     {
+//         for (int j = 0; j < n->column; j++)
+//         {
+//             temp_matrix[i][j] = 0.0;
+//         }
+//     }
 
-                new_element->line = i + 1;
-                new_element->column = j + 1;
-                new_element->info = temp_matrix[i][j];
-                new_element->right = NULL;
-                new_element->below = NULL;
+//     // Realiza a multiplicação das matrizes
+//     for (Matrix *i = m; i != NULL; i = i->right)
+//     {
+//         for (Matrix *j = n; j != NULL; j = j->below)
+//         {
+//             if (i->column == j->line)
+//             {
+//                 temp_matrix[i->line - 1][j->column - 1] += i->info * j->info;
+//             }
+//         }
+//     }
 
-                if (result_head == NULL)
-                {
-                    result_head = new_element;
-                }
-                else
-                {
-                    Matrix *current = result_head;
-                    while (current->right != NULL)
-                    {
-                        current = current->right;
-                    }
-                    current->right = new_element;
-                }
-            }
-        }
-    }
+//     // Cria a matriz resultante com base na matriz temporária
+//     for (int i = 0; i < m->line; i++)
+//     {
+//         for (int j = 0; j < n->column; j++)
+//         {
+//             if (temp_matrix[i][j] != 0.0)
+//             {
+//                 Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
+//                 if (!new_element)
+//                 {
+//                     fprintf(stderr, "Erro: Falha na alocação de memória\n");
+//                     exit(1);
+//                 }
 
-    return result_head;
-}
+//                 new_element->line = i + 1;
+//                 new_element->column = j + 1;
+//                 new_element->info = temp_matrix[i][j];
+//                 new_element->right = NULL;
+//                 new_element->below = NULL;
 
-// Function to transpose a matrix
-Matrix *matrix_transpose(Matrix *m)
-{
-    if (m == NULL)
-    {
-        return NULL; // Retorna NULL se a matriz for vazia
-    }
+//                 if (result_head == NULL)
+//                 {
+//                     result_head = new_element;
+//                 }
+//                 else
+//                 {
+//                     Matrix *current = result_head;
+//                     while (current->right != NULL)
+//                     {
+//                         current = current->right;
+//                     }
+//                     current->right = new_element;
+//                 }
+//             }
+//         }
+//     }
 
-    Matrix *result_head = NULL; // Cabeça da matriz transposta
+//     return result_head;
+// }
 
-    // Inicializa uma matriz temporária para armazenar os elementos transpostos
-    int num_columns = m->line; // Número de colunas na matriz transposta
-    int num_lines = m->column; // Número de linhas na matriz transposta
-    Matrix *temp_matrix[num_columns][num_lines];
+// // Function to transpose a matrix
+// Matrix *matrix_transpose(Matrix *m)
+// {
+//     if (m == NULL)
+//     {
+//         return NULL; // Retorna NULL se a matriz for vazia
+//     }
 
-    // Inicializa a matriz temporária com NULL em todas as posições
-    for (int i = 0; i < num_columns; i++)
-    {
-        for (int j = 0; j < num_lines; j++)
-        {
-            temp_matrix[i][j] = NULL;
-        }
-    }
+//     Matrix *result_head = NULL; // Cabeça da matriz transposta
 
-    // Preenche a matriz temporária com os elementos transpostos
-    for (Matrix *current = m; current != NULL; current = current->right)
-    {
-        Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-        if (!new_element)
-        {
-            fprintf(stderr, "Erro: Falha na alocação de memória\n");
-            exit(1);
-        }
+//     // Inicializa uma matriz temporária para armazenar os elementos transpostos
+//     int num_columns = m->line; // Número de colunas na matriz transposta
+//     int num_lines = m->column; // Número de linhas na matriz transposta
+//     Matrix *temp_matrix[num_columns][num_lines];
 
-        int transposed_line = current->column - 1;
-        int transposed_column = current->line - 1;
+//     // Inicializa a matriz temporária com NULL em todas as posições
+//     for (int i = 0; i < num_columns; i++)
+//     {
+//         for (int j = 0; j < num_lines; j++)
+//         {
+//             temp_matrix[i][j] = NULL;
+//         }
+//     }
 
-        new_element->line = transposed_line + 1;
-        new_element->column = transposed_column + 1;
-        new_element->info = current->info;
-        new_element->right = NULL;
-        new_element->below = NULL;
+//     // Preenche a matriz temporária com os elementos transpostos
+//     for (Matrix *current = m; current != NULL; current = current->right)
+//     {
+//         Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
+//         if (!new_element)
+//         {
+//             fprintf(stderr, "Erro: Falha na alocação de memória\n");
+//             exit(1);
+//         }
 
-        if (temp_matrix[transposed_line][transposed_column] == NULL)
-        {
-            temp_matrix[transposed_line][transposed_column] = new_element;
-        }
-        else
-        {
-            Matrix *temp_current = temp_matrix[transposed_line][transposed_column];
-            while (temp_current->right != NULL)
-            {
-                temp_current = temp_current->right;
-            }
-            temp_current->right = new_element;
-        }
-    }
+//         int transposed_line = current->column - 1;
+//         int transposed_column = current->line - 1;
 
-    // Cria a matriz transposta com base na matriz temporária
-    for (int i = 0; i < num_columns; i++)
-    {
-        for (int j = 0; j < num_lines; j++)
-        {
-            Matrix *temp_current = temp_matrix[i][j];
-            if (temp_current != NULL)
-            {
-                if (result_head == NULL)
-                {
-                    result_head = temp_current;
-                }
-                else
-                {
-                    Matrix *current = result_head;
-                    while (current->below != NULL)
-                    {
-                        current = current->below;
-                    }
-                    current->below = temp_current;
-                }
-            }
-        }
-    }
+//         new_element->line = transposed_line + 1;
+//         new_element->column = transposed_column + 1;
+//         new_element->info = current->info;
+//         new_element->right = NULL;
+//         new_element->below = NULL;
 
-    return result_head;
-}
+//         if (temp_matrix[transposed_line][transposed_column] == NULL)
+//         {
+//             temp_matrix[transposed_line][transposed_column] = new_element;
+//         }
+//         else
+//         {
+//             Matrix *temp_current = temp_matrix[transposed_line][transposed_column];
+//             while (temp_current->right != NULL)
+//             {
+//                 temp_current = temp_current->right;
+//             }
+//             temp_current->right = new_element;
+//         }
+//     }
 
-float matrix_getelem(Matrix *m, int x, int y)
-{
-    Matrix *current = m;
+//     // Cria a matriz transposta com base na matriz temporária
+//     for (int i = 0; i < num_columns; i++)
+//     {
+//         for (int j = 0; j < num_lines; j++)
+//         {
+//             Matrix *temp_current = temp_matrix[i][j];
+//             if (temp_current != NULL)
+//             {
+//                 if (result_head == NULL)
+//                 {
+//                     result_head = temp_current;
+//                 }
+//                 else
+//                 {
+//                     Matrix *current = result_head;
+//                     while (current->below != NULL)
+//                     {
+//                         current = current->below;
+//                     }
+//                     current->below = temp_current;
+//                 }
+//             }
+//         }
+//     }
 
-    while (current != NULL)
-    {
-        if (current->line == x && current->column == y)
-        {
-            return current->info;
-        }
-        current = current->right;
-    }
+//     return result_head;
+// }
 
-    return 0.0; // Retorna 0.0 se o elemento não for encontrado
-}
+// float matrix_getelem(Matrix *m, int x, int y)
+// {
+//     Matrix *current = m;
 
-void matrix_setelem(Matrix *m, int x, int y, float elem)
-{
-    Matrix *current = m;
+//     while (current != NULL)
+//     {
+//         if (current->line == x && current->column == y)
+//         {
+//             return current->info;
+//         }
+//         current = current->right;
+//     }
 
-    while (current != NULL)
-    {
-        if (current->line == x && current->column == y)
-        {
-            current->info = elem;
-            return;
-        }
-        current = current->right;
-    }
+//     return 0.0; // Retorna 0.0 se o elemento não for encontrado
+// }
 
-    // Se o elemento não for encontrado, insere o novo elemento na matriz
-    Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
-    if (!new_element)
-    {
-        fprintf(stderr, "Erro: Falha na alocação de memória\n");
-        exit(1);
-    }
+// void matrix_setelem(Matrix *m, int x, int y, float elem)
+// {
+//     Matrix *current = m;
 
-    new_element->line = x;
-    new_element->column = y;
-    new_element->info = elem;
-    new_element->right = NULL;
-    new_element->below = NULL;
+//     while (current != NULL)
+//     {
+//         if (current->line == x && current->column == y)
+//         {
+//             current->info = elem;
+//             return;
+//         }
+//         current = current->right;
+//     }
 
-    Matrix *prev_col = NULL;
-    Matrix *prev_row = NULL;
-    current = m;
+//     // Se o elemento não for encontrado, insere o novo elemento na matriz
+//     Matrix *new_element = (Matrix *)malloc(sizeof(Matrix));
+//     if (!new_element)
+//     {
+//         fprintf(stderr, "Erro: Falha na alocação de memória\n");
+//         exit(1);
+//     }
 
-    while (current != NULL)
-    {
-        if (current->line == x)
-        {
-            prev_col = current;
-        }
-        if (current->column == y)
-        {
-            prev_row = current;
-        }
-        current = current->right;
-    }
+//     new_element->line = x;
+//     new_element->column = y;
+//     new_element->info = elem;
+//     new_element->right = NULL;
+//     new_element->below = NULL;
 
-    if (prev_col)
-    {
-        prev_col->right = new_element;
-    }
+//     Matrix *prev_col = NULL;
+//     Matrix *prev_row = NULL;
+//     current = m;
 
-    if (!prev_row || prev_row->line != x)
-    {
-        if (m == NULL)
-        {
-            m = new_element;
-        }
-        prev_row = new_element;
-    }
-}
+//     while (current != NULL)
+//     {
+//         if (current->line == x)
+//         {
+//             prev_col = current;
+//         }
+//         if (current->column == y)
+//         {
+//             prev_row = current;
+//         }
+//         current = current->right;
+//     }
+
+//     if (prev_col)
+//     {
+//         prev_col->right = new_element;
+//     }
+
+//     if (!prev_row || prev_row->line != x)
+//     {
+//         if (m == NULL)
+//         {
+//             m = new_element;
+//         }
+//         prev_row = new_element;
+//     }
+// }
