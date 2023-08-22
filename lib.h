@@ -10,6 +10,8 @@ struct matrix {
 };
 typedef struct matrix Matrix;
 
+Matrix* create_matrix_node(int line, int column, float info);
+Matrix* insert_node(Matrix *head, Matrix *node);
 Matrix* matrix_create(void);
 void matrix_print(Matrix* m);
 void matrix_destroy(Matrix* m);
