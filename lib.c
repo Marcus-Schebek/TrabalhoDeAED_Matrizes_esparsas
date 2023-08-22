@@ -84,3 +84,49 @@ void matrix_print(Matrix* m) {
 }
 
 
+float matrix_getelem(Matrix* m, int x, int y) {
+    if (m == NULL) {
+        fprintf(stderr, "Matrix is empty.\n");
+        return 0.0; // Valor padrão para matriz vazia
+    }
+
+    Matrix* current_row = m->right;
+    while (current_row != m) {
+        if (current_row->line == x) {
+            while (current_row != NULL) {
+                if (current_row->column == y) {
+                    return current_row->info;
+                }
+                current_row = current_row->right;
+            }
+            break; // Saia do loop de linha se chegarmos à coluna maior do que y
+        }
+        current_row = current_row->below;
+    }
+    
+    return 0.0; // Elemento não encontrado
+}
+
+void matrix_setelem(Matrix* m, int x, int y, float elem) {
+    if (m == NULL) {
+        fprintf(stderr, "A matriz está vazia.\n");
+        return;
+    }
+
+    Matrix* current_row = m->right;
+    while (current_row != m) {
+        if (current_row->line == x) {
+            while (current_row != NULL) {
+                if (current_row->column == y) {
+                    current_row->info = elem;
+                    return;
+                }
+                current_row = current_row->right;
+            }
+            break; // Saia do loop de linha se chegarmos à coluna maior do que y
+        }
+        current_row = current_row->below;
+    }
+    
+    fprintf(stderr, "Elemento não encontrado na posiçãoS (%d, %d).\n", x, y);
+}
