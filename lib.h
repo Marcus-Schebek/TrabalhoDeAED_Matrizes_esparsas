@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #ifndef LIB_H
 #define LIB_H
 
@@ -15,10 +17,13 @@ Matrix* insert_node(Matrix *head, Matrix *node);
 Matrix* matrix_create(void);
 void matrix_print(Matrix* m);
 void matrix_destroy(Matrix* m);
-Matrix* matrix_add(Matrix* m, Matrix* n);
-Matrix* matrix_multiply(Matrix* m, Matrix* n);
-Matrix* matrix_transpose(Matrix* m);
+//Matrix* matrix_add(Matrix* m, Matrix* n);
+// Matrix* matrix_multiply(Matrix* m, Matrix* n);
+ Matrix* matrix_transpose(Matrix* m);
 float matrix_getelem(Matrix* m, int x, int y);
 void matrix_setelem(Matrix* m, int x, int y, float elem);
+int getRow(Matrix* m);
+int getColumn(Matrix* m);
+
 
 #endif

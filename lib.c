@@ -83,7 +83,6 @@ void matrix_print(Matrix* m) {
     }
 }
 
-
 float matrix_getelem(Matrix* m, int x, int y) {
     if (m == NULL) {
         fprintf(stderr, "Matrix is empty.\n");
@@ -130,3 +129,24 @@ void matrix_setelem(Matrix* m, int x, int y, float elem) {
     
     fprintf(stderr, "Elemento não encontrado na posiçãoS (%d, %d).\n", x, y);
 }
+
+int getColumn(Matrix* m){
+    int col = 0;
+    Matrix *busca = m -> right;
+    while(busca != m){
+        busca = busca -> right;
+        col++;
+    }
+    return col;
+}
+
+int getRow(Matrix* m){
+    int lin = 0;
+    Matrix *busca = m -> below;
+    while(busca != m){
+        busca = busca -> below;
+        lin++;
+    }
+    return lin;
+}
+
